@@ -284,7 +284,7 @@ public class ImagePickerActivity extends AppCompatActivity implements SeekBar.On
             } else {
                 imageView = (ImageView) convertView;
             }
-            imagePicker.getImageLoader().displayImage(ImagePickerActivity.this, getItem(position).path, imageView, size, size);
+            imagePicker.getImageLoader().displayImage(ImagePickerActivity.this, getItem(position).uri, imageView, size, size);
             return imageView;
         }
     }

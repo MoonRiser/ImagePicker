@@ -255,6 +255,15 @@ public class ImageGridActivity extends ImageBaseActivity implements ImageDataSou
                 Intent intent = new Intent(ImageGridActivity.this, FreeCropActivity.class);
                 startActivityForResult(intent, ImagePicker.REQUEST_CODE_CROP);
             } else if (imagePicker.isCrop()) {
+                // TODO: 1/3/21  xres
+                if (imageItem.isVideo()) {
+                    showToast("video can not crop");
+                    Intent intent = new Intent();
+                    intent.putExtra(ImagePicker.EXTRA_RESULT_ITEMS, imagePicker.getSelectedImages());
+                    setResult(ImagePicker.RESULT_CODE_ITEMS, intent);
+                    finish();
+                    return;
+                }
                 Intent intent = new Intent(ImageGridActivity.this, ImageCropActivity.class);
                 startActivityForResult(intent, ImagePicker.REQUEST_CODE_CROP);
             } else {

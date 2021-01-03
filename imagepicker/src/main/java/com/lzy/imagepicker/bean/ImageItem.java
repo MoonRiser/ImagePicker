@@ -1,7 +1,10 @@
 package com.lzy.imagepicker.bean;
 
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.lzy.imagepicker.util.Utils;
 
 import java.io.Serializable;
 
@@ -14,6 +17,9 @@ public class ImageItem implements Serializable, Parcelable {
     public int height;
     public String mimeType;
     public long addTime;
+    public Uri uri;
+    public long duration = -1L; // only for video, in ms
+
 
     @Override
     public boolean equals(Object o) {
@@ -40,6 +46,8 @@ public class ImageItem implements Serializable, Parcelable {
         dest.writeInt(this.height);
         dest.writeString(this.mimeType);
         dest.writeLong(this.addTime);
+        dest.writeParcelable(this.uri, 0);
+        dest.writeLong(duration);
     }
 
     public ImageItem() {
@@ -53,6 +61,8 @@ public class ImageItem implements Serializable, Parcelable {
         this.height = in.readInt();
         this.mimeType = in.readString();
         this.addTime = in.readLong();
+        this.uri = in.readParcelable(Uri.class.getClassLoader());
+        this.duration = in.readLong();
     }
 
     public static final Parcelable.Creator<ImageItem> CREATOR = new Parcelable.Creator<ImageItem>() {
@@ -66,4 +76,14 @@ public class ImageItem implements Serializable, Parcelable {
             return new ImageItem[size];
         }
     };
+
+    public boolean isImage() {
+        return Utils.isImage(mimeType);
+    }
+
+    public boolean isVideo() {
+        return Utils.isVideo(mimeType);
+    }
+
+
 }

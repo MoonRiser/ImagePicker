@@ -1,6 +1,8 @@
 package com.lzy.imagepicker;
 
+import android.content.ContentUris;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 
@@ -11,6 +13,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
@@ -21,27 +24,50 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
 
     public static final int LOADER_ALL = 0;
     public static final int LOADER_CATEGORY = 1;
-    private final String[] IMAGE_PROJECTION = {
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATA,
-            MediaStore.Images.Media.SIZE,
-            MediaStore.Images.Media.WIDTH,
-            MediaStore.Images.Media.HEIGHT,
-            MediaStore.Images.Media.MIME_TYPE,
-            MediaStore.Images.Media.DATE_ADDED};
+    private static final Uri QUERY_URI = MediaStore.Files.getContentUri("external");
 
-    private FragmentActivity activity;
-    private OnImagesLoadedListener loadedListener;
-    private ArrayList<ImageFolder> imageFolders = new ArrayList<>();
-    private int mLoadedCount = 0;
+    private final String[] MEDIA_PROJECTION = {
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.SIZE,
+            MediaStore.MediaColumns.WIDTH,
+            MediaStore.MediaColumns.HEIGHT,
+            MediaStore.MediaColumns.MIME_TYPE,
+            MediaStore.MediaColumns.DATE_ADDED,
+            MediaStore.Files.FileColumns._ID,
+            "duration"
+    };
+
+    // TODO: 1/3/21  xres
+    private static final String SELECTION_ALL =
+            "(" + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?"
+                    + " OR "
+                    + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?)"
+                    + " AND " + MediaStore.MediaColumns.SIZE + ">0";
+    private static final String[] SELECTION_ALL_ARGS = {
+            String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE),
+            String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO),
+    };
+
+    private static final String SELECTION_ONLY_IMAGES =
+            "(" + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?";
+    private static final String[] SELECTION_IMAGES_ARGS = {
+            String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE),
+    };
+
+
+    private final FragmentActivity activity;
+    private final OnImagesLoadedListener loadedListener;
+    private final ArrayList<ImageFolder> imageFolders = new ArrayList<>();
+    private int mLoadedCount;
 
 
     public ImageDataSource(FragmentActivity activity, String path, OnImagesLoadedListener loadedListener) {
         this.activity = activity;
         this.loadedListener = loadedListener;
-        mLoadedCount=0;
+        mLoadedCount = 0;
 
-        LoaderManager loaderManager = activity.getSupportLoaderManager();
+        LoaderManager loaderManager = LoaderManager.getInstance(activity);
         if (path == null) {
             loaderManager.initLoader(LOADER_ALL, null, this);
         } else {
@@ -51,19 +77,25 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
         }
     }
 
+    @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         CursorLoader cursorLoader = null;
-        if (id == LOADER_ALL)
-            cursorLoader = new CursorLoader(activity, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, null, null, IMAGE_PROJECTION[6] + " DESC");
-        if (id == LOADER_CATEGORY)
-            cursorLoader = new CursorLoader(activity, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, IMAGE_PROJECTION[1] + " like '%" + args.getString("path") + "%'", null, IMAGE_PROJECTION[6] + " DESC");
+        if (id == LOADER_ALL) {
+            if (ImagePicker.getInstance().isWithVideo()) {
+                cursorLoader = new CursorLoader(activity, QUERY_URI, MEDIA_PROJECTION, SELECTION_ALL, SELECTION_ALL_ARGS, MEDIA_PROJECTION[6] + " DESC");
 
+            } else {
+                cursorLoader = new CursorLoader(activity, QUERY_URI, MEDIA_PROJECTION, SELECTION_ONLY_IMAGES, SELECTION_IMAGES_ARGS, MEDIA_PROJECTION[6] + " DESC");
+            }
+        }
+        if (id == LOADER_CATEGORY)
+            cursorLoader = new CursorLoader(activity, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MEDIA_PROJECTION, MEDIA_PROJECTION[1] + " like '%" + args.getString("path") + "%'", null, MEDIA_PROJECTION[6] + " DESC");
         return cursorLoader;
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (data == null || data.getCount() == 0) {
             return;
         }
@@ -74,19 +106,21 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
         mLoadedCount = data.getCount();
         ArrayList<ImageItem> allImages = new ArrayList<>();
         while (data.moveToNext()) {
-            String imageName = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[0]));
-            String imagePath = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[1]));
+            String imageName = data.getString(data.getColumnIndexOrThrow(MEDIA_PROJECTION[0]));
+            String imagePath = data.getString(data.getColumnIndexOrThrow(MEDIA_PROJECTION[1]));
 
             File file = new File(imagePath);
             if (!file.exists() || file.length() <= 0) {
                 continue;
             }
-
-            long imageSize = data.getLong(data.getColumnIndexOrThrow(IMAGE_PROJECTION[2]));
-            int imageWidth = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[3]));
-            int imageHeight = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[4]));
-            String imageMimeType = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[5]));
-            long imageAddTime = data.getLong(data.getColumnIndexOrThrow(IMAGE_PROJECTION[6]));
+            // TODO: 1/3/21  xres
+            long duration = data.getLong(data.getColumnIndex("duration"));
+            long id = data.getLong(data.getColumnIndex(MediaStore.Files.FileColumns._ID));
+            long imageSize = data.getLong(data.getColumnIndexOrThrow(MEDIA_PROJECTION[2]));
+            int imageWidth = data.getInt(data.getColumnIndexOrThrow(MEDIA_PROJECTION[3]));
+            int imageHeight = data.getInt(data.getColumnIndexOrThrow(MEDIA_PROJECTION[4]));
+            String imageMimeType = data.getString(data.getColumnIndexOrThrow(MEDIA_PROJECTION[5]));
+            long imageAddTime = data.getLong(data.getColumnIndexOrThrow(MEDIA_PROJECTION[6]));
             ImageItem imageItem = new ImageItem();
             imageItem.name = imageName;
             imageItem.path = imagePath;
@@ -95,6 +129,19 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
             imageItem.height = imageHeight;
             imageItem.mimeType = imageMimeType;
             imageItem.addTime = imageAddTime;
+            // TODO: 1/3/21  xres
+            Uri contentUri;
+            if (imageItem.isImage()) {
+                contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            } else if (imageItem.isVideo()) {
+                contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                imageItem.duration = duration;
+            } else {
+                // ?
+                contentUri = MediaStore.Files.getContentUri("external");
+            }
+            imageItem.uri = ContentUris.withAppendedId(contentUri, id);
+
             allImages.add(imageItem);
             File imageFile = new File(imagePath);
             File imageParentFile = imageFile.getParentFile();
@@ -125,7 +172,7 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         System.out.println("--------");
     }
 

@@ -66,6 +66,17 @@ public class ImagePicker {
     private int mCurrentImageFolderPosition = 0;
     private List<OnImageSelectedListener> mImageSelectedListeners;
 
+    // TODO: 1/2/21  xres
+    private boolean withVideo = true;
+
+    public boolean isWithVideo() {
+        return withVideo;
+    }
+
+    public void setWithVideo(boolean withVideo) {
+        this.withVideo = withVideo;
+    }
+
     private static ImagePicker mInstance;
 
 

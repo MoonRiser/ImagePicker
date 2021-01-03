@@ -2,11 +2,13 @@ package com.lzy.imagepicker.adapter;
 
 import android.Manifest;
 import android.app.Activity;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.lzy.imagepicker.ImagePicker;
 import com.lzy.imagepicker.R;
@@ -67,18 +69,18 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == ITEM_TYPE_CAMERA){
-            return new CameraViewHolder(mInflater.inflate(R.layout.adapter_camera_item,parent,false));
+        if (viewType == ITEM_TYPE_CAMERA) {
+            return new CameraViewHolder(mInflater.inflate(R.layout.adapter_camera_item, parent, false));
         }
-        return new ImageViewHolder(mInflater.inflate(R.layout.adapter_image_list_item,parent,false));
+        return new ImageViewHolder(mInflater.inflate(R.layout.adapter_image_list_item, parent, false));
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        if (holder instanceof CameraViewHolder){
-            ((CameraViewHolder)holder).bindCamera();
-        }else if (holder instanceof ImageViewHolder){
-            ((ImageViewHolder)holder).bind(position);
+        if (holder instanceof CameraViewHolder) {
+            ((CameraViewHolder) holder).bindCamera();
+        } else if (holder instanceof ImageViewHolder) {
+            ((ImageViewHolder) holder).bind(position);
         }
     }
 
@@ -107,13 +109,14 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ViewHolder> {
         }
     }
 
-    private class ImageViewHolder extends ViewHolder{
+    private class ImageViewHolder extends ViewHolder {
 
         View rootView;
         ImageView ivThumb;
         View mask;
         View checkView;
         SuperCheckBox cbCheck;
+        TextView tvDuration;
 
 
         ImageViewHolder(View itemView) {
@@ -121,12 +124,13 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ViewHolder> {
             rootView = itemView;
             ivThumb = (ImageView) itemView.findViewById(R.id.iv_thumb);
             mask = itemView.findViewById(R.id.mask);
-            checkView=itemView.findViewById(R.id.checkView);
+            checkView = itemView.findViewById(R.id.checkView);
+            tvDuration = itemView.findViewById(R.id.tvDuration);
             cbCheck = (SuperCheckBox) itemView.findViewById(R.id.cb_check);
             itemView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mImageSize));
         }
 
-        void bind(final int position){
+        void bind(final int position) {
             final ImageItem imageItem = getItem(position);
             ivThumb.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -162,12 +166,21 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ViewHolder> {
             } else {
                 cbCheck.setVisibility(View.GONE);
             }
-            imagePicker.getImageLoader().displayImage(mActivity, imageItem.path, ivThumb, mImageSize, mImageSize);
+            // TODO: 1/3/21  xres
+            if (imageItem.isVideo()){
+                tvDuration.setVisibility(View.VISIBLE);
+                tvDuration.setText(DateUtils.formatElapsedTime(imageItem.duration / 1000));
+            }
+            if (imageItem.isImage()){
+                tvDuration.setVisibility(View.GONE);
+            }
+
+            imagePicker.getImageLoader().displayImage(mActivity, imageItem.uri, ivThumb, mImageSize, mImageSize);
         }
 
     }
 
-    private class CameraViewHolder extends ViewHolder{
+    private class CameraViewHolder extends ViewHolder {
 
         View mItemView;
 
@@ -176,7 +189,7 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ViewHolder> {
             mItemView = itemView;
         }
 
-        void bindCamera(){
+        void bindCamera() {
             mItemView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mImageSize));
             mItemView.setTag(null);
             mItemView.setOnClickListener(new View.OnClickListener() {

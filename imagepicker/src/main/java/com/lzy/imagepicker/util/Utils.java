@@ -85,4 +85,17 @@ public class Utils {
         int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
         return resourceId > 0 ? context.getResources().getDimensionPixelSize(resourceId) : 0;
     }
+
+    public static boolean isImage(String mimeType) {
+        if (mimeType == null) return false;
+        return mimeType.startsWith("image");
+    }
+
+    public static boolean isVideo(String mimeType) {
+        if (mimeType == null) return false;
+        return mimeType.startsWith("video");
+    }
+
+
+
 }
