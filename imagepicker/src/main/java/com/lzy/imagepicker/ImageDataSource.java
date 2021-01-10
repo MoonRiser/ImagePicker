@@ -68,6 +68,7 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
     private final OnImagesLoadedListener loadedListener;
     private final ArrayList<ImageFolder> imageFolders = new ArrayList<>();
     private final List<ImageItem> imageItemsCache = new ArrayList<>();
+    private boolean isUpdate = false;
 
     private int mLoadedCount;
 
@@ -113,15 +114,17 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
         if (mLoadedCount == data.getCount()) {
             return;
         }
+        if (mLoadedCount != 0) {
+            isUpdate = true;
+        }
         final LinkedList<ImageItem> allImages = new LinkedList<>();
 
-        Log.i("xres", "onLoadFinished run once" + System.currentTimeMillis() + Thread.currentThread());
+        Log.i("xres", "onLoadFinished run once" + System.currentTimeMillis());
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                int count = data.getCount() - mLoadedCount;
-                while (data.moveToNext() && count > 0) {
-                    count--;
+                int count = 1;
+                while (data.moveToNext()) {
 
                     String imageName = data.getString(data.getColumnIndexOrThrow(MEDIA_PROJECTION[0]));
                     String imagePath = data.getString(data.getColumnIndexOrThrow(MEDIA_PROJECTION[1]));
@@ -184,8 +187,11 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
                     });
 
 
-                    //加载完每20条数据，通知界面刷新
-                    if (imageItemsCache.size() == LOAD_COUNT_ONCE || imageItemsCache.size() == 2 * LOAD_COUNT_ONCE || !data.moveToNext()) {
+                    //加载完每20/40条数据，通知界面刷新
+                    if (imageItemsCache.size() == count * LOAD_COUNT_ONCE || data.isLast()) {
+                        count *= 2;
+                        Log.i("xres", "() run once" + "size" + imageItemsCache.size() + "data.isLast():" + data.isLast() + "#  " + System.currentTimeMillis());
+
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -198,7 +204,8 @@ public class ImageDataSource implements LoaderManager.LoaderCallbacks<Cursor> {
                                     allImagesFolder.images = allImages;
                                     imageFolders.add(0, allImagesFolder);
                                 }
-                                loadedListener.onImagesLoaded(imageItemsCache, imageFolders, false, mLoadedCount != 0);
+                                loadedListener.onImagesLoaded(imageItemsCache, imageFolders, false, isUpdate);
+                                isUpdate = false;
                                 imageItemsCache.clear();
                             }
                         });

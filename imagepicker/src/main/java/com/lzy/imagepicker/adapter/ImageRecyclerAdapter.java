@@ -66,14 +66,17 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ViewHolder> {
         int originSize = this.images.size();
         if (!isUpdate) {
             this.images.addAll(images);
+            if (isShowCamera && originSize == 0) {
+                originSize++;
+            }
+            notifyItemRangeInserted(originSize, images.size());
         } else {
-            this.images.addAll(0, images);
+            this.images.clear();
+            this.images.addAll(images);
+            notifyDataSetChanged();
         }
-        if (isShowCamera && originSize == 0) {
-            originSize++;
-        }
-        notifyItemRangeInserted(originSize, images.size());
-        Log.i("xres", "run once" + originSize + "#  " + System.currentTimeMillis());
+
+        Log.i("xres", "insertData run once" + originSize + "#  " + System.currentTimeMillis());
 
     }
 
@@ -129,8 +132,6 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ViewHolder> {
         if (holder instanceof CameraViewHolder) {
             ((CameraViewHolder) holder).bindCamera();
         } else if (holder instanceof ImageViewHolder) {
-            Log.i("xres", "onBindViewHolder run once" + "#  " + System.currentTimeMillis());
-
             ((ImageViewHolder) holder).bind(position);
         }
     }
