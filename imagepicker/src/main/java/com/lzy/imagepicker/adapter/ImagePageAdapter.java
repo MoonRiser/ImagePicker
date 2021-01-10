@@ -13,6 +13,7 @@ import com.lzy.imagepicker.bean.ImageItem;
 import com.lzy.imagepicker.util.Utils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.viewpager.widget.PagerAdapter;
 
@@ -22,11 +23,11 @@ public class ImagePageAdapter extends PagerAdapter {
     private int screenWidth;
     private int screenHeight;
     private ImagePicker imagePicker;
-    private ArrayList<ImageItem> images = new ArrayList<>();
+    private List<ImageItem> images = new ArrayList<>();
     private Activity mActivity;
     public PhotoViewClickListener listener;
 
-    public ImagePageAdapter(Activity activity, ArrayList<ImageItem> images) {
+    public ImagePageAdapter(Activity activity, List<ImageItem> images) {
         this.mActivity = activity;
         this.images = images;
 
@@ -36,7 +37,7 @@ public class ImagePageAdapter extends PagerAdapter {
         imagePicker = ImagePicker.getInstance();
     }
 
-    public void setData(ArrayList<ImageItem> images) {
+    public void setData(List<ImageItem> images) {
         this.images = images;
     }
 

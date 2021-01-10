@@ -40,6 +40,10 @@ public class ImagePicker {
     public static final int RESULT_CODE_ITEMS = 1004;
     public static final int RESULT_CODE_BACK = 1005;
 
+    //每加载出这么多个就刷新一次
+    public static final int LOAD_COUNT_ONCE = 20;
+
+
     public static final String EXTRA_RESULT_ITEMS = "extra_result_items";
     public static final String EXTRA_SELECTED_IMAGE_POSITION = "selected_image_position";
     public static final String EXTRA_IMAGE_ITEMS = "extra_image_items";
@@ -214,7 +218,7 @@ public class ImagePicker {
         mCurrentImageFolderPosition = mCurrentSelectedImageSetPosition;
     }
 
-    public ArrayList<ImageItem> getCurrentImageFolderItems() {
+    public List<ImageItem> getCurrentImageFolderItems() {
         return mImageFolders.get(mCurrentImageFolderPosition).images;
     }
 

@@ -23,22 +23,20 @@ public class ImageFolderAdapter extends BaseAdapter {
     private Activity mActivity;
     private LayoutInflater mInflater;
     private int mImageSize;
-    private List<ImageFolder> imageFolders;
+    private final List<ImageFolder> imageFolders = new ArrayList<>();
     private int lastSelected = 0;
 
-    public ImageFolderAdapter(Activity activity, List<ImageFolder> folders) {
+    public ImageFolderAdapter(Activity activity) {
         mActivity = activity;
-        if (folders != null && folders.size() > 0) imageFolders = folders;
-        else imageFolders = new ArrayList<>();
-
         imagePicker = ImagePicker.getInstance();
         mImageSize = Utils.getImageItemWidth(mActivity);
         mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     public void refreshData(List<ImageFolder> folders) {
-        if (folders != null && folders.size() > 0) imageFolders = folders;
-        else imageFolders.clear();
+        if (folders == null) return;
+        imageFolders.clear();
+        imageFolders.addAll(folders);
         notifyDataSetChanged();
     }
 

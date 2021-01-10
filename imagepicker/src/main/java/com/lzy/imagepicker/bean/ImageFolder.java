@@ -2,13 +2,14 @@ package com.lzy.imagepicker.bean;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ImageFolder implements Serializable {
 
     public String name;
     public String path;
     public ImageItem cover;
-    public ArrayList<ImageItem> images;
+    public List<ImageItem> images;
 
     @Override
     public boolean equals(Object o) {

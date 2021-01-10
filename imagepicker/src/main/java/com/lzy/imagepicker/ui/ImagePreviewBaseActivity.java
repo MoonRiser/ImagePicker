@@ -15,12 +15,13 @@ import com.lzy.imagepicker.util.Utils;
 import com.lzy.imagepicker.view.ViewPagerFixed;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public abstract class ImagePreviewBaseActivity extends ImageBaseActivity {
 
     protected ImagePicker imagePicker;
-    protected ArrayList<ImageItem> mImageItems;
+    protected ArrayList<ImageItem> mImageItems = new ArrayList<>();
     protected int mCurrentPosition = 0;
     protected TextView mTitleCount;
     protected ArrayList<ImageItem> selectedImages;
@@ -39,9 +40,9 @@ public abstract class ImagePreviewBaseActivity extends ImageBaseActivity {
         isFromItems = getIntent().getBooleanExtra(ImagePicker.EXTRA_FROM_ITEMS, false);
 
         if (isFromItems) {
-            mImageItems = (ArrayList<ImageItem>) getIntent().getSerializableExtra(ImagePicker.EXTRA_IMAGE_ITEMS);
+            mImageItems.addAll((List<ImageItem>) getIntent().getSerializableExtra(ImagePicker.EXTRA_IMAGE_ITEMS));
         } else {
-            mImageItems = (ArrayList<ImageItem>) DataHolder.getInstance().retrieve(DataHolder.DH_CURRENT_IMAGE_FOLDER_ITEMS);
+            mImageItems.addAll((List<ImageItem>) DataHolder.getInstance().retrieve(DataHolder.DH_CURRENT_IMAGE_FOLDER_ITEMS));
         }
 
         imagePicker = ImagePicker.getInstance();

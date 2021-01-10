@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -93,6 +94,12 @@ public class ImageGridActivity extends ImageBaseActivity implements ImageDataSou
         }
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler);
+        mRecyclerAdapter = new ImageRecyclerAdapter(this);
+        mRecyclerAdapter.setOnImageItemClickListener(this);
+        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
+        mRecyclerView.setAdapter(mRecyclerAdapter);
+        mRecyclerView.addItemDecoration(new GridSpacingItemDecoration(3, Utils.dp2px(this, 2), false));
+
 
         findViewById(R.id.btn_back).setOnClickListener(this);
         mBtnOk = (Button) findViewById(R.id.btn_ok);
@@ -111,10 +118,8 @@ public class ImageGridActivity extends ImageBaseActivity implements ImageDataSou
             mBtnPre.setVisibility(View.GONE);
         }
 
-        mImageFolderAdapter = new ImageFolderAdapter(this, null);
-        mRecyclerAdapter = new ImageRecyclerAdapter(this, null);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
-        mRecyclerView.setAdapter(mRecyclerAdapter);
+        mImageFolderAdapter = new ImageFolderAdapter(this);
+
         onImageSelected(0, null, false);
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
@@ -221,21 +226,16 @@ public class ImageGridActivity extends ImageBaseActivity implements ImageDataSou
     }
 
     @Override
-    public void onImagesLoaded(List<ImageFolder> imageFolders) {
+    public void onImagesLoaded(List<ImageItem> imageItems, List<ImageFolder> imageFolders, boolean isFinished, final boolean isUpdate) {
         this.mImageFolders = imageFolders;
         imagePicker.setImageFolders(imageFolders);
-        if (imageFolders.size() == 0) {
-            mRecyclerAdapter.refreshData(null);
-        } else {
-            mRecyclerAdapter.refreshData(imageFolders.get(0).images);
+        if (imageFolders.size() > 0) {
+            mRecyclerAdapter.insertData(imageItems, isUpdate);
+            if (isFinished) {
+                mImageFolderAdapter.refreshData(imageFolders);
+            }
         }
-        mRecyclerAdapter.setOnImageItemClickListener(this);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
-        if (mRecyclerView.getItemDecorationCount() < 1) {
-            mRecyclerView.addItemDecoration(new GridSpacingItemDecoration(3, Utils.dp2px(this, 2), false));
-        }
-        mRecyclerView.setAdapter(mRecyclerAdapter);
-        mImageFolderAdapter.refreshData(imageFolders);
+
     }
 
     @Override
